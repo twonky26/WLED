@@ -51,8 +51,10 @@ private:
 
   bool ensureRadio() {
     if (radio) return ready;
+
+    SPI.begin(sckPin, misoPin, mosiPin);
     radio = new RF24(cePin, csnPin);
-    if (!radio->begin(sckPin, misoPin, mosiPin)) {
+    if (!radio->begin(&SPI, cePin, csnPin)) {
       ready = false;
       return false;
     }
@@ -141,8 +143,7 @@ private:
 
   void sendHue(const byte* rgb) {
     // Convert RGB to hue (0-255) and send.
-    CHSV hsv;
-    rgb2hsv_approximate(rgb, hsv);
+    CHSV hsv = rgb2hsv_approximate(CRGB(rgb[0], rgb[1], rgb[2]));
     sendPacket(0x04, hsv.h);
   }
 
@@ -192,12 +193,12 @@ private:
           hsv.h = argument;
           hsv.s = 255;
           hsv.v = bri > 0 ? bri : 255;
-          byte newCol[4];
+          CRGB newCol;
           hsv2rgb_rainbow(hsv, newCol);
-          if (col[0] != newCol[0] || col[1] != newCol[1] || col[2] != newCol[2]) {
-            col[0] = newCol[0];
-            col[1] = newCol[1];
-            col[2] = newCol[2];
+          if (col[0] != newCol.r || col[1] != newCol.g || col[2] != newCol.b) {
+            col[0] = newCol.r;
+            col[1] = newCol.g;
+            col[2] = newCol.b;
             changed = true;
           }
         }
