@@ -27,7 +27,6 @@ struct MilightHubBridgeSettings {
   uint8_t packetRepeats = 3;
   uint8_t packetRepeatsPerLoop = 1;
   uint8_t listenRepeats = 1;
-  uint32_t baseAddress = 0xB0B1B2B3;
   uint8_t groupId = 0x01;
   uint16_t deviceId = 0x0001;
   unsigned long minSendInterval = 45;

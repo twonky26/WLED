@@ -1164,6 +1164,28 @@ size_t BusManager::memUsage() {
   return size + maxI2S;
 }
 
+class BusMilight : public Bus {
+public:
+  explicit BusMilight(const BusConfig &bc) : Bus(bc.type, bc.start, bc.autoWhite, bc.count, bc.reversed, bc.refreshReq) {
+    _data.resize(getLength(), 0);
+    _valid = true;
+  }
+
+  void show() override {}
+  void setPixelColor(unsigned pix, uint32_t c) override {
+    if (pix < _data.size()) _data[pix] = c;
+  }
+  uint32_t getPixelColor(unsigned pix) const override { return (pix < _data.size()) ? _data[pix] : 0; }
+  size_t getPins(uint8_t* pinArray = nullptr) const override {
+    if (pinArray) memset(pinArray, 0xFF, OUTPUT_MAX_PINS);
+    return 0;
+  }
+  const String getCustomText() const override { return F("MiLight RF bridge"); }
+
+private:
+  std::vector<uint32_t> _data;
+};
+
 int BusManager::add(const BusConfig &bc) {
   DEBUGBUS_PRINTF_P(PSTR("Bus: Adding bus (p:%d v:%d)\n"), getNumBusses(), getNumVirtualBusses());
   unsigned digital = 0;
@@ -1205,28 +1227,6 @@ static String LEDTypesToJson(const std::vector<LEDType>& types) {
   }
   return json;
 }
-
-class BusMilight : public Bus {
-public:
-  explicit BusMilight(const BusConfig &bc) : Bus(bc.type, bc.start, bc.autoWhite, bc.count, bc.reversed, bc.refreshReq) {
-    _data.resize(getLength(), 0);
-    _valid = true;
-  }
-
-  void show() override {}
-  void setPixelColor(unsigned pix, uint32_t c) override {
-    if (pix < _data.size()) _data[pix] = c;
-  }
-  uint32_t getPixelColor(unsigned pix) const override { return (pix < _data.size()) ? _data[pix] : 0; }
-  size_t getPins(uint8_t* pinArray = nullptr) const override {
-    if (pinArray) memset(pinArray, 0xFF, OUTPUT_MAX_PINS);
-    return 0;
-  }
-  const String getCustomText() const override { return F("MiLight RF bridge"); }
-
-private:
-  std::vector<uint32_t> _data;
-};
 
 // credit @willmmiles & @netmindz https://github.com/wled/WLED/pull/4056
 String BusManager::getLEDTypesJSONString() {

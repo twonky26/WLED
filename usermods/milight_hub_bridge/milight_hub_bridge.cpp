@@ -31,7 +31,6 @@ private:
   uint8_t packetRepeats = 3;
   uint8_t packetRepeatsPerLoop = 1;
   uint8_t listenRepeats = 1;
-  uint32_t baseAddress = 0xB0B1B2B3; // upper 4 bytes of address
   uint8_t groupId = 0x01;            // MiLight group/zone (1-4)
   uint16_t deviceId = 0x0001;        // logical bulb id
 
@@ -61,7 +60,6 @@ private:
   static const char _repeats[];
   static const char _repeatsPerLoop[];
   static const char _listenRepeats[];
-  static const char _base[];
   static const char _group[];
   static const char _device[];
   static const char _lights[];
@@ -123,9 +121,15 @@ private:
     return true;
   }
 
+  uint32_t baseForRemote(const String &remoteType) const {
+    // Default base used by most MiLight remotes; can be extended per remote type.
+    (void)remoteType;
+    return 0xB0B1B2B3;
+  }
+
   uint64_t composeAddress() const {
-    // MiLight radios use 5-byte addresses. Use baseAddress (4 bytes) + deviceId.
-    uint64_t addr = baseAddress;
+    // MiLight radios use 5-byte addresses. Use remote-specific base (4 bytes) + deviceId.
+    uint64_t addr = baseForRemote(currentLight().remoteType);
     addr = (addr << 8) | (deviceId & 0xFF);
     return addr;
   }
@@ -354,7 +358,6 @@ public:
     top[FPSTR(_repeats)] = packetRepeats;
     top[FPSTR(_repeatsPerLoop)] = packetRepeatsPerLoop;
     top[FPSTR(_listenRepeats)] = listenRepeats;
-    top[FPSTR(_base)] = baseAddress;
     top[FPSTR(_group)] = groupId;
     top[FPSTR(_device)] = deviceId;
     top[FPSTR(_interval)] = minSendInterval;
@@ -393,7 +396,6 @@ public:
     configComplete &= getJsonValue(top[FPSTR(_repeats)], packetRepeats);
     configComplete &= getJsonValue(top[FPSTR(_repeatsPerLoop)], packetRepeatsPerLoop);
     configComplete &= getJsonValue(top[FPSTR(_listenRepeats)], listenRepeats);
-    configComplete &= getJsonValue(top[FPSTR(_base)], baseAddress);
     configComplete &= getJsonValue(top[FPSTR(_group)], groupId);
     configComplete &= getJsonValue(top[FPSTR(_device)], deviceId);
     configComplete &= getJsonValue(top[FPSTR(_interval)], minSendInterval);
@@ -440,7 +442,6 @@ public:
     packetRepeats = cfg.packetRepeats;
     packetRepeatsPerLoop = cfg.packetRepeatsPerLoop;
     listenRepeats = cfg.listenRepeats;
-    baseAddress = cfg.baseAddress;
     groupId = cfg.groupId;
     deviceId = cfg.deviceId;
     lights = cfg.lights;
@@ -476,7 +477,6 @@ const char MilightHubBridgeUsermod::_listenChannel[]  PROGMEM = "listen_channel"
 const char MilightHubBridgeUsermod::_repeats[]        PROGMEM = "packet_repeats";
 const char MilightHubBridgeUsermod::_repeatsPerLoop[] PROGMEM = "packet_repeats_per_loop";
 const char MilightHubBridgeUsermod::_listenRepeats[]  PROGMEM = "listen_repeats";
-const char MilightHubBridgeUsermod::_base[]     PROGMEM = "base_address";
 const char MilightHubBridgeUsermod::_group[]    PROGMEM = "group_id";
 const char MilightHubBridgeUsermod::_device[]   PROGMEM = "device_id";
 const char MilightHubBridgeUsermod::_lights[]   PROGMEM = "lights";
@@ -509,7 +509,6 @@ bool milightGetSettings(MilightHubBridgeSettings& out) {
   out.packetRepeats = MilightHubBridgeUsermod::instance->packetRepeats;
   out.packetRepeatsPerLoop = MilightHubBridgeUsermod::instance->packetRepeatsPerLoop;
   out.listenRepeats = MilightHubBridgeUsermod::instance->listenRepeats;
-  out.baseAddress = MilightHubBridgeUsermod::instance->baseAddress;
   out.groupId = MilightHubBridgeUsermod::instance->groupId;
   out.deviceId = MilightHubBridgeUsermod::instance->deviceId;
   out.lights = MilightHubBridgeUsermod::instance->lights;
