@@ -11,6 +11,7 @@ class MilightHubBridgeUsermod : public Usermod {
   friend bool milightGetSettings(MilightHubBridgeSettings& out);
   friend bool milightApplySettings(const MilightHubBridgeSettings& cfg, uint8_t linkAction);
 private:
+  static MilightHubBridgeUsermod* instance;
   bool enabled = true;
   bool mirrorStateToRadio = true;
   bool applyRadioToState = true;
@@ -377,34 +378,34 @@ const char MilightHubBridgeUsermod::_group[]    PROGMEM = "group_id";
 const char MilightHubBridgeUsermod::_device[]   PROGMEM = "device_id";
 const char MilightHubBridgeUsermod::_interval[] PROGMEM = "min_interval_ms";
 
+MilightHubBridgeUsermod* MilightHubBridgeUsermod::instance = nullptr;
+
 static MilightHubBridgeUsermod milight_hub_bridge;
 REGISTER_USERMOD(milight_hub_bridge);
 
-static MilightHubBridgeUsermod* instance = nullptr;
-
 bool milightGetSettings(MilightHubBridgeSettings& out) {
-  if (!instance) return false;
-  out.enabled = instance->enabled;
-  out.mirrorStateToRadio = instance->mirrorStateToRadio;
-  out.applyRadioToState = instance->applyRadioToState;
-  out.cePin = instance->cePin;
-  out.csnPin = instance->csnPin;
-  out.irqPin = instance->irqPin;
-  out.sckPin = instance->sckPin;
-  out.misoPin = instance->misoPin;
-  out.mosiPin = instance->mosiPin;
-  out.rfChannel = instance->rfChannel;
-  out.baseAddress = instance->baseAddress;
-  out.groupId = instance->groupId;
-  out.deviceId = instance->deviceId;
-  out.minSendInterval = instance->minSendInterval;
+  if (!MilightHubBridgeUsermod::instance) return false;
+  out.enabled = MilightHubBridgeUsermod::instance->enabled;
+  out.mirrorStateToRadio = MilightHubBridgeUsermod::instance->mirrorStateToRadio;
+  out.applyRadioToState = MilightHubBridgeUsermod::instance->applyRadioToState;
+  out.cePin = MilightHubBridgeUsermod::instance->cePin;
+  out.csnPin = MilightHubBridgeUsermod::instance->csnPin;
+  out.irqPin = MilightHubBridgeUsermod::instance->irqPin;
+  out.sckPin = MilightHubBridgeUsermod::instance->sckPin;
+  out.misoPin = MilightHubBridgeUsermod::instance->misoPin;
+  out.mosiPin = MilightHubBridgeUsermod::instance->mosiPin;
+  out.rfChannel = MilightHubBridgeUsermod::instance->rfChannel;
+  out.baseAddress = MilightHubBridgeUsermod::instance->baseAddress;
+  out.groupId = MilightHubBridgeUsermod::instance->groupId;
+  out.deviceId = MilightHubBridgeUsermod::instance->deviceId;
+  out.minSendInterval = MilightHubBridgeUsermod::instance->minSendInterval;
   return true;
 }
 
 bool milightApplySettings(const MilightHubBridgeSettings& cfg, uint8_t linkAction) {
-  if (!instance) return false;
-  instance->applySettings(cfg);
-  instance->triggerLink(linkAction);
+  if (!MilightHubBridgeUsermod::instance) return false;
+  MilightHubBridgeUsermod::instance->applySettings(cfg);
+  MilightHubBridgeUsermod::instance->triggerLink(linkAction);
   return true;
 }
 
