@@ -163,6 +163,12 @@ void handleSettingsSet(AsyncWebServerRequest *request, byte subPage)
     useParallelI2S = request->hasArg(F("PR"));
     #endif
 
+    #ifdef USERMOD_MILIGHT_HUB_BRIDGE
+    MilightHubBridgeSettings milightCfg;
+    bool haveMilightSettings = milightGetSettings(milightCfg);
+    std::vector<MilightBulbConfig> milightLights;
+    #endif
+
     bool busesChanged = false;
     for (int s = 0; s < 36; s++) { // theoretical limit is 36 : "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ"
       int offset = s < 10 ? '0' : 'A' - 10;
@@ -180,6 +186,11 @@ void handleSettingsSet(AsyncWebServerRequest *request, byte subPage)
       char la[4] = "LA"; la[2] = offset+s; la[3] = 0; //LED mA
       char ma[4] = "MA"; ma[2] = offset+s; ma[3] = 0; //max mA
       char hs[4] = "HS"; hs[2] = offset+s; hs[3] = 0; //hostname (for network types, custom text for others)
+      char mr[4] = "MR"; mr[2] = offset+s; mr[3] = 0; // milight remote type
+      char mc[4] = "MC"; mc[2] = offset+s; mc[3] = 0; // milight color mode
+      char md[4] = "MD"; md[2] = offset+s; md[3] = 0; // milight device id
+      char mg[4] = "MG"; mg[2] = offset+s; mg[3] = 0; // milight group id
+      char mn[4] = "MN"; mn[2] = offset+s; mn[3] = 0; // milight name
       if (!request->hasArg(lp)) {
         DEBUG_PRINTF_P(PSTR("# of buses: %d\n"), s+1);
         break;
@@ -231,6 +242,21 @@ void handleSettingsSet(AsyncWebServerRequest *request, byte subPage)
       }
       type |= request->hasArg(rf) << 7; // off refresh override
       text = request->arg(hs).substring(0,31);
+
+      #ifdef USERMOD_MILIGHT_HUB_BRIDGE
+      if ((type & 0x7F) == TYPE_VIRTUAL_MILIGHT) {
+        MilightBulbConfig bulb;
+        if (haveMilightSettings && s < (int)milightCfg.lights.size()) bulb = milightCfg.lights[s];
+        if (request->hasArg(mn)) bulb.name = request->arg(mn);
+        if (request->hasArg(mr)) bulb.remoteType = request->arg(mr);
+        if (request->hasArg(mc)) bulb.colorMode = request->arg(mc);
+        if (request->hasArg(md)) bulb.deviceId = request->arg(md).toInt();
+        if (request->hasArg(mg)) bulb.groupId = request->arg(mg).toInt();
+        text = bulb.name.substring(0,31);
+        milightLights.push_back(bulb);
+      }
+      #endif
+
       // actual finalization is done in WLED::loop() (removing old busses and adding new)
       // this may happen even before this loop is finished so we do "doInitBusses" after the loop
       busConfigs.emplace_back(type, pins, start, length, colorOrder | (channelSwap<<4), request->hasArg(cv), skip, awmode, freq, maPerLed, maMax, text);
@@ -366,6 +392,20 @@ void handleSettingsSet(AsyncWebServerRequest *request, byte subPage)
     if (t >= 0 && t < 4) paletteBlend = t;
     t = request->arg(F("BF")).toInt();
     if (t > 0) briMultiplier = t;
+
+    #ifdef USERMOD_MILIGHT_HUB_BRIDGE
+    if (haveMilightSettings || !milightLights.empty()) {
+      if (!haveMilightSettings) milightCfg = MilightHubBridgeSettings();
+      if (!milightLights.empty()) {
+        milightCfg.lights = milightLights;
+        milightCfg.activeLight = 0;
+        milightCfg.deviceId = milightLights[0].deviceId;
+        milightCfg.groupId = milightLights[0].groupId;
+      }
+      milightCfg.enabled = milightCfg.enabled || !milightLights.empty();
+      milightApplySettings(milightCfg);
+    }
+    #endif
 
     doInitBusses = busesChanged;
 

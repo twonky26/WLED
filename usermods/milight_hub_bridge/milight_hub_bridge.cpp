@@ -65,6 +65,7 @@ private:
   static const char _lights[];
   static const char _lightName[];
   static const char _lightType[];
+  static const char _lightColorMode[];
   static const char _lightDeviceId[];
   static const char _lightGroupId[];
   static const char _activeLight[];
@@ -376,6 +377,7 @@ public:
       JsonObject entry = lightsArr.createNestedObject();
       entry[FPSTR(_lightName)] = l.name;
       entry[FPSTR(_lightType)] = l.remoteType;
+      entry[FPSTR(_lightColorMode)] = l.colorMode;
       entry[FPSTR(_lightDeviceId)] = l.deviceId;
       entry[FPSTR(_lightGroupId)] = l.groupId;
     }
@@ -416,6 +418,7 @@ public:
         MilightBulbConfig l;
         getJsonValue(obj[FPSTR(_lightName)], l.name);
         getJsonValue(obj[FPSTR(_lightType)], l.remoteType);
+        getJsonValue(obj[FPSTR(_lightColorMode)], l.colorMode);
         uint16_t idTemp = l.deviceId;
         getJsonValue(obj[FPSTR(_lightDeviceId)], idTemp);
         l.deviceId = idTemp;
@@ -491,6 +494,7 @@ const char MilightHubBridgeUsermod::_device[]   PROGMEM = "device_id";
 const char MilightHubBridgeUsermod::_lights[]   PROGMEM = "lights";
 const char MilightHubBridgeUsermod::_lightName[] PROGMEM = "name";
 const char MilightHubBridgeUsermod::_lightType[] PROGMEM = "remote_type";
+const char MilightHubBridgeUsermod::_lightColorMode[] PROGMEM = "color_mode";
 const char MilightHubBridgeUsermod::_lightDeviceId[] PROGMEM = "device_id";
 const char MilightHubBridgeUsermod::_lightGroupId[]  PROGMEM = "group_id";
 const char MilightHubBridgeUsermod::_activeLight[]   PROGMEM = "active_light";

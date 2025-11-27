@@ -7,6 +7,7 @@
 struct MilightBulbConfig {
   String name = F("Primary light");
   String remoteType = F("rgb_cct");
+  String colorMode = F("rgb_cct");
   uint16_t deviceId = 0x0001;
   uint8_t groupId = 0x01;
 };

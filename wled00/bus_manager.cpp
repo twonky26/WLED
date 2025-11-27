@@ -1166,7 +1166,7 @@ size_t BusManager::memUsage() {
 
 class BusMilight : public Bus {
 public:
-  explicit BusMilight(const BusConfig &bc) : Bus(bc.type, bc.start, bc.autoWhite, bc.count, bc.reversed, bc.refreshReq) {
+  explicit BusMilight(const BusConfig &bc) : Bus(bc.type, bc.start, bc.autoWhite, bc.count, bc.reversed, bc.refreshReq), _text(bc.text) {
     _data.resize(getLength(), 0);
     _valid = true;
   }
@@ -1180,10 +1180,11 @@ public:
     if (pinArray) memset(pinArray, 0xFF, OUTPUT_MAX_PINS);
     return 0;
   }
-  const String getCustomText() const override { return F("MiLight RF bridge"); }
+  const String getCustomText() const override { return _text.isEmpty() ? F("MiLight RF bridge") : _text; }
 
 private:
   std::vector<uint32_t> _data;
+  String _text;
 };
 
 int BusManager::add(const BusConfig &bc) {
@@ -1235,7 +1236,7 @@ String BusManager::getLEDTypesJSONString() {
   json += LEDTypesToJson(BusOnOff::getLEDTypes());
   json += LEDTypesToJson(BusPwm::getLEDTypes());
   json += LEDTypesToJson(BusNetwork::getLEDTypes());
-  json += LEDTypesToJson({{TYPE_VIRTUAL_MILIGHT, "milight", PSTR("MiLight (RF)")}});
+  json += LEDTypesToJson({{TYPE_VIRTUAL_MILIGHT, "V", PSTR("MiLight (RF)")}});
   //json += LEDTypesToJson(BusVirtual::getLEDTypes());
   #ifdef WLED_ENABLE_HUB75MATRIX
   json += LEDTypesToJson(BusHub75Matrix::getLEDTypes());
