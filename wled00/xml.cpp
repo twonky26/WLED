@@ -1,4 +1,7 @@
 #include "wled.h"
+#ifdef USERMOD_MILIGHT_HUB_BRIDGE
+#include "usermods/milight_hub_bridge/milight_hub_bridge.h"
+#endif
 #include "wled_ethernet.h"
 
 /*
@@ -310,6 +313,28 @@ void getSettingsJS(byte subPage, Print& settingsScript)
     printSetFormValue(settingsScript,PSTR("FR"),strip.getTargetFps());
     printSetFormValue(settingsScript,PSTR("AW"),Bus::getGlobalAWMode());
     printSetFormCheckbox(settingsScript,PSTR("PR"),BusManager::hasParallelOutput());  // get it from bus manager not global variable
+
+    #ifdef USERMOD_MILIGHT_HUB_BRIDGE
+    MilightHubBridgeSettings mlCfg;
+    if (milightGetSettings(mlCfg)) {
+      printSetFormCheckbox(settingsScript,PSTR("ML_EN"), mlCfg.enabled);
+      printSetFormCheckbox(settingsScript,PSTR("ML_MS"), mlCfg.mirrorStateToRadio);
+      printSetFormCheckbox(settingsScript,PSTR("ML_LR"), mlCfg.applyRadioToState);
+      printSetFormValue(settingsScript,PSTR("ML_CE"), mlCfg.cePin);
+      printSetFormValue(settingsScript,PSTR("ML_CS"), mlCfg.csnPin);
+      printSetFormValue(settingsScript,PSTR("ML_IRQ"), mlCfg.irqPin);
+      printSetFormValue(settingsScript,PSTR("ML_SCK"), mlCfg.sckPin);
+      printSetFormValue(settingsScript,PSTR("ML_MISO"), mlCfg.misoPin);
+      printSetFormValue(settingsScript,PSTR("ML_MOSI"), mlCfg.mosiPin);
+      printSetFormValue(settingsScript,PSTR("ML_CH"), mlCfg.rfChannel);
+      settingsScript.printf_P(PSTR("setValue('ML_BASE','0x%08X');"), mlCfg.baseAddress);
+      printSetFormValue(settingsScript,PSTR("ML_GROUP"), mlCfg.groupId);
+      printSetFormValue(settingsScript,PSTR("ML_DEV"), mlCfg.deviceId);
+      printSetFormValue(settingsScript,PSTR("ML_IVL"), mlCfg.minSendInterval);
+    } else {
+      settingsScript.print(F("toggle('mlight');"));
+    }
+    #endif
 
     unsigned sumMa = 0;
     for (size_t s = 0; s < BusManager::getNumBusses(); s++) {

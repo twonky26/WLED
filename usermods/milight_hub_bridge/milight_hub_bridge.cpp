@@ -2,11 +2,14 @@
 #ifdef ARDUINO_ARCH_ESP32
 #include <SPI.h>
 #include <RF24.h>
+#include "usermods/milight_hub_bridge/milight_hub_bridge.h"
 
 // Minimal MiLight-style RF bridge built around an nRF24L01 transceiver.
 // This usermod sends WLED state changes as MiLight packets and applies
 // MiLight packets received over 2.4 GHz directly to WLED without MQTT.
 class MilightHubBridgeUsermod : public Usermod {
+  friend bool milightGetSettings(MilightHubBridgeSettings& out);
+  friend bool milightApplySettings(const MilightHubBridgeSettings& cfg, uint8_t linkAction);
 private:
   bool enabled = true;
   bool mirrorStateToRadio = true;
@@ -243,6 +246,7 @@ private:
   }
 
 public:
+  MilightHubBridgeUsermod() { instance = this; }
   ~MilightHubBridgeUsermod() {
     if (radio) {
       delete radio;
@@ -328,6 +332,33 @@ public:
   }
 
   uint16_t getId() override { return USERMOD_ID_MILIGHT_HUB_BRIDGE; }
+  void applySettings(const MilightHubBridgeSettings& cfg) {
+    enabled = cfg.enabled;
+    mirrorStateToRadio = cfg.mirrorStateToRadio;
+    applyRadioToState = cfg.applyRadioToState;
+    cePin = cfg.cePin;
+    csnPin = cfg.csnPin;
+    irqPin = cfg.irqPin;
+    sckPin = cfg.sckPin;
+    misoPin = cfg.misoPin;
+    mosiPin = cfg.mosiPin;
+    rfChannel = cfg.rfChannel;
+    baseAddress = cfg.baseAddress;
+    groupId = cfg.groupId;
+    deviceId = cfg.deviceId;
+    minSendInterval = cfg.minSendInterval;
+    restartRadioIfNeeded();
+  }
+
+  void triggerLink(uint8_t action) {
+    if (!action || !ensureRadio()) return;
+    // 0x06 and 0x07 are reserved here for pair/unpair style commands.
+    if (action == 1) {
+      sendPacket(0x06, 0x01);
+    } else if (action == 2) {
+      sendPacket(0x07, 0x01);
+    }
+  }
 };
 
 const char MilightHubBridgeUsermod::_name[]     PROGMEM = "MiLight";
@@ -348,6 +379,34 @@ const char MilightHubBridgeUsermod::_interval[] PROGMEM = "min_interval_ms";
 
 static MilightHubBridgeUsermod milight_hub_bridge;
 REGISTER_USERMOD(milight_hub_bridge);
+
+static MilightHubBridgeUsermod* instance = nullptr;
+
+bool milightGetSettings(MilightHubBridgeSettings& out) {
+  if (!instance) return false;
+  out.enabled = instance->enabled;
+  out.mirrorStateToRadio = instance->mirrorStateToRadio;
+  out.applyRadioToState = instance->applyRadioToState;
+  out.cePin = instance->cePin;
+  out.csnPin = instance->csnPin;
+  out.irqPin = instance->irqPin;
+  out.sckPin = instance->sckPin;
+  out.misoPin = instance->misoPin;
+  out.mosiPin = instance->mosiPin;
+  out.rfChannel = instance->rfChannel;
+  out.baseAddress = instance->baseAddress;
+  out.groupId = instance->groupId;
+  out.deviceId = instance->deviceId;
+  out.minSendInterval = instance->minSendInterval;
+  return true;
+}
+
+bool milightApplySettings(const MilightHubBridgeSettings& cfg, uint8_t linkAction) {
+  if (!instance) return false;
+  instance->applySettings(cfg);
+  instance->triggerLink(linkAction);
+  return true;
+}
 
 #else
 #warning "MilightHubBridgeUsermod requires ESP32 platform."
