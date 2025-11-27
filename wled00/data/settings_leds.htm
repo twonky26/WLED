@@ -889,26 +889,6 @@ Swap: <select id="xw${s}" name="XW${s}">
                 <div id="json" style="display:none;">JSON file: <input type="file" name="data" accept=".json"><button type="button" class="sml" onclick="uploadFile(d.Sf.data,'/ir.json')">Upload</button><br></div>
                 <a href="https://kno.wled.ge/interfaces/infrared/" target="_blank">IR info</a><br>
                 <hr class="sml">
-                <div id="mlight">
-                        <h3>MiLight</h3>
-                        Enable MiLight RF bridge: <input type="checkbox" name="ML_EN"><br>
-                        Mirror WLED state to MiLight RF: <input type="checkbox" name="ML_MS"><br>
-                        Apply MiLight packets to WLED: <input type="checkbox" name="ML_LR"><br>
-                        <br>
-                        RF channel: <input type="number" min="0" max="125" name="ML_CH" class="s"> (default 83)<br>
-                        Base address: <input type="text" name="ML_BASE" class="l" placeholder="0xB0B1B2B3"><br>
-                        Group/Zone: <input type="number" min="1" max="4" name="ML_GROUP" class="s"> Device ID: <input type="number" min="1" max="255" name="ML_DEV" class="s"><br>
-                        Send rate limit: <input type="number" min="10" max="500" name="ML_IVL" class="s"> ms<br>
-                        Link action: <select name="ML_LINK">
-                                <option value="0">None</option>
-                                <option value="1">Pair/Link bulb</option>
-                                <option value="2">Unlink bulb</option>
-                        </select><br>
-                        <br>
-                        CE: <input type="number" min="-1" max="48" name="ML_CE" class="xs"> CSN: <input type="number" min="-1" max="48" name="ML_CS" class="xs"> IRQ: <input type="number" min="-1" max="48" name="ML_IRQ" class="xs"><br>
-                        SCK: <input type="number" min="-1" max="48" name="ML_SCK" class="xs"> MISO: <input type="number" min="-1" max="48" name="ML_MISO" class="xs"> MOSI: <input type="number" min="-1" max="48" name="ML_MOSI" class="xs"><br>
-                </div>
-                <hr class="sml">
                 Relay GPIO: <input type="number" min="-1" max="48" name="RL" onchange="UI()" class="xs"><span style="cursor: pointer;" onclick="off('RL')">&nbsp;&#x2715;</span><br>
                 Invert <input type="checkbox" name="RM"> Open drain <input type="checkbox" name="RO"><br>
                 <hr class="sml">

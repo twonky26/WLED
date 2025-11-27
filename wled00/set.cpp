@@ -369,28 +369,6 @@ void handleSettingsSet(AsyncWebServerRequest *request, byte subPage)
 
     doInitBusses = busesChanged;
 
-    #ifdef USERMOD_MILIGHT_HUB_BRIDGE
-    MilightHubBridgeSettings mlCfg;
-    uint8_t linkAction = request->arg(F("ML_LINK")).toInt();
-    if (milightGetSettings(mlCfg)) {
-      mlCfg.enabled = request->hasArg(F("ML_EN"));
-      mlCfg.mirrorStateToRadio = request->hasArg(F("ML_MS"));
-      mlCfg.applyRadioToState = request->hasArg(F("ML_LR"));
-      mlCfg.cePin = request->arg(F("ML_CE")).toInt();
-      mlCfg.csnPin = request->arg(F("ML_CS")).toInt();
-      mlCfg.irqPin = request->arg(F("ML_IRQ")).toInt();
-      mlCfg.sckPin = request->arg(F("ML_SCK")).toInt();
-      mlCfg.misoPin = request->arg(F("ML_MISO")).toInt();
-      mlCfg.mosiPin = request->arg(F("ML_MOSI")).toInt();
-      mlCfg.rfChannel = request->arg(F("ML_CH")).toInt();
-      String baseArg = request->arg(F("ML_BASE"));
-      if (baseArg.length()) mlCfg.baseAddress = strtoul(baseArg.c_str(), nullptr, 0);
-      mlCfg.groupId = request->arg(F("ML_GROUP")).toInt();
-      mlCfg.deviceId = request->arg(F("ML_DEV")).toInt();
-      mlCfg.minSendInterval = request->arg(F("ML_IVL")).toInt();
-      forceSave |= milightApplySettings(mlCfg, linkAction);
-    }
-    #endif
   }
 
   //UI
