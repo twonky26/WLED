@@ -1,4 +1,7 @@
 #include "wled.h"
+#ifdef USERMOD_MILIGHT_HUB_BRIDGE
+#include "milight_hub_bridge.h"
+#endif
 #include "wled_ethernet.h"
 
 /*
@@ -290,6 +293,12 @@ void getSettingsJS(byte subPage, Print& settingsScript)
 
     settingsScript.printf_P(PSTR("d.ledTypes=%s;"), BusManager::getLEDTypesJSONString().c_str());
 
+    #ifdef USERMOD_MILIGHT_HUB_BRIDGE
+    MilightHubBridgeSettings milightCfg;
+    bool haveMilightSettings = milightGetSettings(milightCfg);
+    uint8_t milightIdx = 0;
+    #endif
+
     // set limits
     settingsScript.printf_P(PSTR("bLimits(%d,%d,%d,%d,%d,%d,%d,%d);"),
       WLED_MAX_BUSSES,
@@ -330,6 +339,7 @@ void getSettingsJS(byte subPage, Print& settingsScript)
       char la[4] = "LA"; la[2] = offset+s; la[3] = 0; //LED current
       char ma[4] = "MA"; ma[2] = offset+s; ma[3] = 0; //max per-port PSU current
       char hs[4] = "HS"; hs[2] = offset+s; hs[3] = 0; //hostname (for network types, custom text for others)
+      char suffix = offset + s;
       settingsScript.print(F("addLEDs(1);"));
       uint8_t pins[OUTPUT_MAX_PINS];
       int nPins = bus->getPins(pins);
@@ -370,6 +380,28 @@ void getSettingsJS(byte subPage, Print& settingsScript)
       printSetFormValue(settingsScript,la,bus->getLEDCurrent());
       printSetFormValue(settingsScript,ma,bus->getMaxCurrent());
       printSetFormValue(settingsScript,hs,bus->getCustomText().c_str());
+
+      #ifdef USERMOD_MILIGHT_HUB_BRIDGE
+      if (bus->getType() == TYPE_VIRTUAL_MILIGHT) {
+        MilightBulbConfig bulb;
+        if (haveMilightSettings && milightIdx < milightCfg.lights.size()) {
+          bulb = milightCfg.lights[milightIdx];
+        }
+        char mr[4] = { 'M','R', suffix , 0};
+        char mc[4] = { 'M','C', suffix , 0};
+        char md[4] = { 'M','D', suffix , 0};
+        char mg[4] = { 'M','G', suffix , 0};
+        char mn[4] = { 'M','N', suffix , 0};
+        printSetFormValue(settingsScript,mr,bulb.remoteType.c_str());
+        printSetFormValue(settingsScript,mc,bulb.colorMode.c_str());
+        printSetFormValue(settingsScript,md,bulb.deviceId);
+        printSetFormValue(settingsScript,mg,bulb.groupId);
+        printSetFormValue(settingsScript,mn,bulb.name.c_str());
+        settingsScript.printf_P(PSTR("shMil('%c',true);"), (s < 10 ? '0'+s : 'A'+(s-10)));
+        milightIdx++;
+      }
+      #endif
+
       sumMa += bus->getMaxCurrent();
     }
     printSetFormValue(settingsScript,PSTR("MA"),BusManager::ablMilliampsMax() ? BusManager::ablMilliampsMax() : sumMa);

@@ -43,7 +43,8 @@
 				if (d.um_p[0]==-1) d.um_p.shift();	// remove filler
 				d.Sf.SDA.max = d.Sf.SCL.max = d.Sf.MOSI.max = d.Sf.SCLK.max = d.Sf.MISO.max = d.max_gpio;
 				//for (let i of d.getElementsByTagName("input")) if (i.type === "number" && i.name.replace("[]","").substr(-3) === "pin") i.max = d.max_gpio;
-				pinDD(); // convert INPUT to SELECT for pins
+                                pinDD(); // convert INPUT to SELECT for pins
+                                tuneMilightUm();
 			});	// If we set async false, file is loaded and executed, then next statement is processed
 		})
 		.catch((error)=>{
@@ -145,11 +146,11 @@
 			urows += `<input type="${t==="int"?"number":t}" name="${k}:${f}${a?"[]":""}" ${c} oninput="check(this,'${k.substr(k.indexOf(":")+1)}')"><br>`;
 		}
 	}
-	function pinDD() {
-		for (let i of d.Sf.elements) {
-			if (i.type === "number" && (i.name.includes("pin") || ["SDA","SCL","MOSI","MISO","SCLK"].includes(i.name))) { //select all pin select elements
-				let v = parseInt(i.value);
-				let sel = addDD(i.name,0);
+        function pinDD() {
+                for (let i of d.Sf.elements) {
+                        if (i.type === "number" && (i.name.includes("pin") || ["SDA","SCL","MOSI","MISO","SCLK"].includes(i.name))) { //select all pin select elements
+                                let v = parseInt(i.value);
+                                let sel = addDD(i.name,0);
 				for (var j = -1; j < d.max_gpio; j++) {
 					if (d.rsvd.includes(j)) continue;
 					let foundPin = pins.indexOf(j);
@@ -166,10 +167,42 @@
 						let opt = addO(sel,e[0],e[1]);
 						if (e[1]==v) opt.selected = true;
 					});
-				});
-			}
-		}
-	}
+                                });
+                        }
+                }
+        }
+        function convertToSelect(name, opts) {
+                let el = d.Sf.querySelector(`[name='${name}']`);
+                if (!el) return;
+                let sel = cE('select');
+                sel.name = el.name;
+                opts.forEach(o=>{
+                        let opt = addO(sel,o[1],o[0]);
+                        if (String(o[0]) === el.value) opt.selected = true;
+                });
+                el.parentNode.insertBefore(sel, el);
+                el.remove();
+        }
+        function hideMilightField(el) {
+                if (!el) return;
+                if (el.previousSibling && el.previousSibling.nodeType === 3) el.previousSibling.textContent = '';
+                el.style.display = 'none';
+        }
+        function tuneMilightUm() {
+                const allowed = new Set(['enabled','mirror_state','listen_radio','rf_power','channel','listen_channel','packet_repeats','packet_repeats_per_loop','listen_repeats','min_interval_ms']);
+                const inputs = d.Sf ? d.Sf.querySelectorAll("[name^='MiLight:']") : [];
+                inputs.forEach(el=>{
+                        let key = el.name.split(':')[1].replace('[]','');
+                        if (!allowed.has(key)) hideMilightField(el);
+                });
+                convertToSelect('MiLight:rf_power', [[0,'Min'],[1,'Low'],[2,'High'],[3,'Max']]);
+                convertToSelect('MiLight:channel', [[0,'Low'],[1,'Mid'],[2,'High']]);
+                convertToSelect('MiLight:listen_channel', [[0,'Low'],[1,'Mid'],[2,'High']]);
+                convertToSelect('MiLight:packet_repeats', [[1,'1'],[2,'2'],[3,'3'],[5,'5'],[7,'7'],[10,'10']]);
+                convertToSelect('MiLight:packet_repeats_per_loop', [[1,'1'],[2,'2'],[3,'3'],[4,'4']]);
+                convertToSelect('MiLight:listen_repeats', [[1,'1'],[2,'2'],[3,'3'],[5,'5']]);
+                convertToSelect('MiLight:min_interval_ms', [[20,'20'],[35,'35'],[45,'45'],[75,'75'],[100,'100'],[150,'150'],[200,'200']]);
+        }
 	function UI(e) {
 		// update changed select options across all usermods
 		let oldV = parseInt(e.dataset.val);
