@@ -28,6 +28,9 @@ private:
   uint8_t rfPowerLevel = RF24_PA_LOW;
   uint8_t rfChannelPreset = 1;    // mid
   uint8_t listenChannelPreset = 1; // mid
+  uint8_t packetRepeats = 3;
+  uint8_t packetRepeatsPerLoop = 1;
+  uint8_t listenRepeats = 1;
   uint32_t baseAddress = 0xB0B1B2B3; // upper 4 bytes of address
   uint8_t groupId = 0x01;            // MiLight group/zone (1-4)
   uint16_t deviceId = 0x0001;        // logical bulb id
