@@ -141,9 +141,9 @@ private:
     sendPacket(0x03, arg);
   }
 
-  void sendHue(const byte* rgb) {
+  void sendHueFromColor(uint32_t color) {
     // Convert RGB to hue (0-255) and send.
-    CHSV hsv = rgb2hsv_approximate(CRGB(rgb[0], rgb[1], rgb[2]));
+    CHSV hsv = rgb2hsv_approximate(CRGB(R(color), G(color), B(color)));
     sendPacket(0x04, hsv.h);
   }
 
@@ -195,20 +195,27 @@ private:
           hsv.v = bri > 0 ? bri : 255;
           CRGB newCol;
           hsv2rgb_rainbow(hsv, newCol);
-          if (col[0] != newCol.r || col[1] != newCol.g || col[2] != newCol.b) {
-            col[0] = newCol.r;
-            col[1] = newCol.g;
-            col[2] = newCol.b;
+
+          Segment& seg = strip.getMainSegment();
+          uint32_t curColor = seg.colors[0];
+          if (R(curColor) != newCol.r || G(curColor) != newCol.g || B(curColor) != newCol.b) {
+            colPri[0] = newCol.r;
+            colPri[1] = newCol.g;
+            colPri[2] = newCol.b;
+            seg.setColor(0, RGBW32(newCol.r, newCol.g, newCol.b, W(curColor)));
             changed = true;
           }
         }
         break;
       case 0x05: // White temperature (0-100 mapped to cool/warm)
         {
-          uint16_t ct = map(argument, 0, 100, 500, 153);
-          if (ct != colTemp) {
-            colTemp = ct;
-            useRgbw = true;
+          // Map to common mired range then convert to segment CCT scale (0-255).
+          uint16_t mired = map(argument, 0, 100, 500, 153);
+          uint8_t cct = (uint8_t)map(mired, 153, 500, 255, 0);
+
+          Segment& seg = strip.getMainSegment();
+          if (seg.cct != cct) {
+            seg.setCCT(cct);
             changed = true;
           }
         }
@@ -254,10 +261,11 @@ public:
 
   void onStateChange(uint8_t) override {
     if (!enabled || !mirrorStateToRadio) return;
+    Segment& seg = strip.getMainSegment();
     sendOnOff(bri > 0);
     sendBrightness(bri);
-    sendHue(col);
-    if (useRgbw) sendWhiteTemperature(colTemp);
+    sendHueFromColor(seg.colors[0]);
+    sendWhiteTemperature(map(seg.cct, 255, 0, 153, 500));
   }
 
   void addToJsonInfo(JsonObject& root) override {
