@@ -1,6 +1,6 @@
 #include "wled.h"
 #ifdef USERMOD_MILIGHT_HUB_BRIDGE
-#include "usermods/milight_hub_bridge/milight_hub_bridge.h"
+#include "milight_hub_bridge.h"
 #endif
 
 /*

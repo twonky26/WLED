@@ -2,7 +2,7 @@
 #ifdef ARDUINO_ARCH_ESP32
 #include <SPI.h>
 #include <RF24.h>
-#include "usermods/milight_hub_bridge/milight_hub_bridge.h"
+#include "milight_hub_bridge.h"
 
 // Minimal MiLight-style RF bridge built around an nRF24L01 transceiver.
 // This usermod sends WLED state changes as MiLight packets and applies
