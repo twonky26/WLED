@@ -90,6 +90,15 @@ private:
     return lights[activeLight];
   }
 
+  const MilightBulbConfig& currentLight() const {
+    static MilightBulbConfig fallback;
+    if (!lights.empty() && activeLight < lights.size()) return lights[activeLight];
+    // Mirror the primary device/group ids if lights are not yet populated.
+    fallback.deviceId = deviceId;
+    fallback.groupId = groupId;
+    return fallback;
+  }
+
   bool ensureRadio() {
     if (radio) return ready;
 
